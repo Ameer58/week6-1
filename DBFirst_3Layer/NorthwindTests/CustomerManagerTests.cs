@@ -3,12 +3,15 @@ using NUnit.Framework;
 using NorthwindBusiness;
 using NorthwindData;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace NorthwindTests
 {
     public class CustomerTests
     {
         CustomerManager _customerManager;
+        IQueryable<Customer> _selectedCustomers;
+
         [SetUp]
         public void Setup()
         {
@@ -16,12 +19,12 @@ namespace NorthwindTests
             // remove test entry in DB if present
             using (var db = new NorthwindContext())
             {
-                var selectedCustomers =
+                _selectedCustomers =
                 from c in db.Customers
                 where c.CustomerId == "MANDA"
                 select c;
 
-                db.Customers.RemoveRange(selectedCustomers);
+                db.Customers.RemoveRange(_selectedCustomers);
                 db.SaveChanges();
             }
         }

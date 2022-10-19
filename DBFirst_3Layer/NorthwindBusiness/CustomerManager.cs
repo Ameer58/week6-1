@@ -16,7 +16,7 @@ namespace NorthwindBusiness
         }
         public CustomerManager(ICustomerService service)
         {
-            _service = service;
+            _service = service ?? throw new ArgumentException("ICustomerService object cannot be null");
         }
         public Customer SelectedCustomer { get; set; }
 
@@ -38,30 +38,30 @@ namespace NorthwindBusiness
 
         public bool Update(string customerId, string contactName, string country, string city, string postcode)
         {
-     
-                var customer = _service.GetCustomerById(customerId);
-                if (customer == null)
-                {
-                    Debug.WriteLine($"Customer {customerId} not found");
-                    return false;
-                }
-                customer.ContactName = contactName;
-                customer.City = city;
-                customer.PostalCode = postcode;
-                customer.Country = country;
-                // write changes to database
-                try
-                {
-                    _service.SaveCustomerChanges();
-                    SelectedCustomer = customer;
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine($"Error updating {customerId}");
-                    return false;
-                }
-            
-                return true;
+
+            var customer = _service.GetCustomerById(customerId);
+            if (customer == null)
+            {
+                Debug.WriteLine($"Customer {customerId} not found");
+                return false;
+            }
+            customer.ContactName = contactName;
+            customer.City = city;
+            customer.PostalCode = postcode;
+            customer.Country = country;
+            // write changes to database
+            try
+            {
+                _service.SaveCustomerChanges();
+                SelectedCustomer = customer;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"Error updating {customerId}");
+                return false;
+            }
+
+            return true;
         }
 
         public bool Delete(string customerId)
@@ -74,7 +74,7 @@ namespace NorthwindBusiness
                 return false;
             }
             _service.RemoveCustomer(customer);
-            
+
             SelectedCustomer = null;
             return true;
         }
