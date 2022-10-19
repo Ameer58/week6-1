@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using NorthwindBusiness;
 using NorthwindData;
@@ -189,5 +190,52 @@ namespace NorthwindTests
             Assert.That(_sut.SelectedCustomer.Country, Is.EqualTo(null));
             Assert.That(_sut.SelectedCustomer.City, Is.EqualTo("Telford"));
         }
+
+        //Using Moq to throw exceptions
+        [Category("Sad Path")]
+        [Category("Update")]
+        [Test]
+        public void ReturnFalse_WhenUpdateIsCalled_AndDatabaseThrowsException()
+        {
+            //Arrange
+            var mockCustomerService = new Mock<ICustomerService>();
+            mockCustomerService.Setup(cs => cs.GetCustomerById(It.IsAny<string>())).Returns(new Customer());
+            mockCustomerService.Setup(cs => cs.SaveCustomerChanges()).Throws<DbUpdateConcurrencyException>();
+            _sut = new CustomerManager(mockCustomerService.Object);
+            //Act
+            var result = _sut.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            Assert.That(result, Is.False);
+            //Also test the SelectedCustomer property has not changed either
+        }
+        //Up to now - we have been doing state-based testing (i.e. what is the state of the system after a given action
+
+
+        //Behaviour based testing
+        
+        [Test]
+        public void CallSaveCustomerChanges_WhenUpdateIsCalled_WithCalidId()
+        {
+            var mockCustomerService = new Mock<ICustomerService>();
+            mockCustomerService.Setup(cs => cs.GetCustomerById(It.IsAny<string>())).Returns(new Customer());
+            _sut = new CustomerManager(mockCustomerService.Object);
+            var result = _sut.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            //Assert
+            mockCustomerService.Verify(cs => cs.SaveCustomerChanges(), Times.Once);
+            //mockCustomerService.Verify(cs => cs.SaveCustomerChanges(), Times.Exactly(1));
+            //mockCustomerService.Verify(cs => cs.SaveCustomerChanges(), Times.AtMostOnce);
+            //mockCustomerService.Verify(cs => cs.GetCustomerList(), Times.Never);
+        }
+
+        [Test]
+        public void LetsSeeWhatHappens_WhenUpdateIsCalled_IfAllInvocations_ArentSetup()
+        {
+            var mockCustomerService = new Mock<ICustomerService>(MockBehavior.Strict);
+            mockCustomerService.Setup(cs => cs.GetCustomerById(It.IsAny<string>())).Returns(new Customer());
+            mockCustomerService.Setup(cs => cs.SaveCustomerChanges());
+            _sut = new CustomerManager(mockCustomerService.Object);
+            var result = _sut.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            Assert.That(result);
+        }
+
     }
 }
