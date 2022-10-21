@@ -123,7 +123,14 @@ namespace NorthwindAPI.Controllers
 
             await _context.Suppliers.AddAsync(supplier);
             await _context.SaveChangesAsync();
-            //return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
+
+            supplierDto= await _context.Suppliers
+                .Where(s => s.SupplierId == supplier.SupplierId)
+                .Include(x => x.Products)
+                .Select(x =>Utils.SupplierToDTO(x))
+                .FirstOrDefaultAsync();
+
+            return CreatedAtAction(nameof(GetSupplier), new { id = supplier.SupplierId }, supplierDto);
         }
 
         // DELETE: api/Suppliers/5
