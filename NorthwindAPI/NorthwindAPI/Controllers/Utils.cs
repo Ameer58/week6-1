@@ -11,6 +11,7 @@ namespace NorthwindAPI.Controllers
                 SupplierId = supplier.SupplierId,
                 CompanyName = supplier.CompanyName,
                 ContactTitle = supplier.ContactTitle,
+                ContactName = supplier.ContactName,
                 Country = supplier.Country,
                 TotalProducts = supplier.Products.Count,
                 Products = supplier.Products.Select(x => ProductToDTO(x)).ToList()

@@ -69,14 +69,24 @@ namespace NorthwindAPI.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         //IActionResult - onyl returns status codes
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSupplier(int id, Supplier supplier)
+        public async Task<IActionResult> PutSupplier(int id, SupplierDTO supplierDto)
         {
-            if (id != supplier.SupplierId)
+            //The id in the URI has to match the URI in the JSON request body we send
+
+            if (id != supplierDto.SupplierId)
             {
                 return BadRequest();
             }
 
-            _context.Entry(supplier).State = EntityState.Modified;
+            Supplier supplier = await _context.Suppliers.FindAsync(id);
+
+
+            //Null-coalescing oeprator returns the value of it's left hand 
+            //operand if it isn't null.
+            supplier.CompanyName = supplierDto.CompanyName ?? supplier.CompanyName;
+            supplier.ContactName = supplierDto.ContactName ?? supplier.ContactName;
+            supplier.ContactTitle = supplierDto.ContactTitle ?? supplier.ContactTitle;
+            supplier.Country = supplierDto.Country ?? supplier.Country;
 
             try
             {
@@ -124,7 +134,7 @@ namespace NorthwindAPI.Controllers
             await _context.Suppliers.AddAsync(supplier);
             await _context.SaveChangesAsync();
 
-            supplierDto= await _context.Suppliers
+            supplierDto = await _context.Suppliers
                 .Where(s => s.SupplierId == supplier.SupplierId)
                 .Include(x => x.Products)
                 .Select(x =>Utils.SupplierToDTO(x))
@@ -142,7 +152,11 @@ namespace NorthwindAPI.Controllers
             {
                 return NotFound();
             }
-
+            // Severing the relationship
+            foreach (var prod in _context.Products.Where(p => p.SupplierId == id))
+            {
+                prod.Supplier = null;
+            }
             _context.Suppliers.Remove(supplier);
             await _context.SaveChangesAsync();
 
