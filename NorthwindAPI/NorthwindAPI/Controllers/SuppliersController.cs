@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NorthwindAPI.Models;
+using NorthwindAPI.Models.DTO;
 
 namespace NorthwindAPI.Controllers
 {
@@ -22,9 +23,26 @@ namespace NorthwindAPI.Controllers
 
         // GET: api/Suppliers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Supplier>>> GetSuppliers()
+        public async Task<ActionResult<IEnumerable<SupplierDTO>>> GetSuppliers()
         {
-            return await _context.Suppliers.ToListAsync();
+            var suppliers = await _context.Suppliers
+                .Include(s => s.Products)
+                .Select(x => Utils.SupplierToDTO(x))
+                .ToListAsync();
+            return suppliers;
+        }
+
+        [HttpGet("{id}/products")]
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetSupplierWithProducts(int id)
+        {
+            if (!SupplierExists(id))
+            {
+                return NotFound();
+            }
+            return await _context.Products
+                .Where(p => p.SupplierId == id)
+                .Select(p => Utils.ProductToDTO(p))
+                .ToListAsync();
         }
 
         // GET: api/Suppliers/5
