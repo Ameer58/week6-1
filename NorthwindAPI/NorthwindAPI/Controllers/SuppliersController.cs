@@ -50,16 +50,19 @@ namespace NorthwindAPI.Controllers
         [Route("{id}")]
         [HttpGet]
         //Returns supplier as JSON or Return a status code
-        public async Task<ActionResult<Supplier>> GetSupplier(int id)
+        public async Task<ActionResult<SupplierDTO>> GetSupplier(int id)
         {
-            var supplier = await _context.Suppliers.FindAsync(id);
+            var supplier = await _context
+                .Suppliers
+                .Where(c => c.SupplierId == id)
+                .Include(s => s.Products)
+                .FirstOrDefaultAsync();
 
             if (supplier == null)
             {
                 return NotFound();
             }
-
-            return supplier;
+            return Utils.SupplierToDTO(supplier);
         }
 
         // PUT: api/Suppliers/5
