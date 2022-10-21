@@ -100,12 +100,30 @@ namespace NorthwindAPI.Controllers
         // POST: api/Suppliers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Supplier>> PostSupplier(Supplier supplier)
+        public async Task<ActionResult<SupplierDTO>> PostSupplier(SupplierDTO supplierDto)
         {
-            _context.Suppliers.Add(supplier);
+
+            List<Product> products = new List<Product>();
+
+            supplierDto.Products
+                .ToList()
+                .ForEach(x => products.Add(new Product { ProductName = x.ProductName, UnitPrice = x.UnitPrice }));
+            await _context.Products.AddRangeAsync(products);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
+            Supplier supplier = new Supplier
+            {
+                SupplierId = supplierDto.SupplierId,
+                CompanyName = supplierDto.CompanyName,
+                ContactName = supplierDto.ContactName,
+                ContactTitle = supplierDto.ContactTitle,
+                Country = supplierDto.Country,
+                Products = products
+            };
+
+            await _context.Suppliers.AddAsync(supplier);
+            await _context.SaveChangesAsync();
+            //return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
         }
 
         // DELETE: api/Suppliers/5
